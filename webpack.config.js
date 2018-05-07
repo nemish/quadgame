@@ -9,6 +9,12 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'main.js'
   },
+  resolve: {
+    extensions: ['.js'],
+    alias: {
+      '@': path.resolve(__dirname)
+    }
+  },
   module: {
     rules: [{
       test: /\.styl$/,
@@ -24,7 +30,7 @@ module.exports = {
         // },
       ],
     }]
-},
+  },
   plugins: [
     new HtmlWebpackPlugin({
       meta: {
