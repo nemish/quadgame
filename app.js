@@ -18,13 +18,13 @@ const getRandomFromArray = (arr) => arr[Math.floor(Math.random() * arr.length)]
 
 const sequenceNumbers = (length) => Array.from({ length }, (v, k) => k)
 
-const createCircle = ({x, y}) => {
-  const width = cellWidth - (cellWidth / 2);
+const createCircle = ({x, y, exactWidth, fillOpacity}) => {
+  const width = exactWidth || (cellWidth - (cellWidth / 2));
   return canvas.circle(width)
-    .x(x * cellWidth + width / 2)
-    .y(y * cellWidth + width / 2)
+    .x(x * cellWidth + (cellWidth / 2) - (width / 2))
+    .y(y * cellWidth + (cellWidth / 2) - (width / 2))
     .fill('#EC6533')
-    .attr({ 'fill-opacity': 0.8 });
+    .attr({ 'fill-opacity': fillOpacity });
 }
 
 const createQuad = ({x, y}) => {
@@ -58,9 +58,28 @@ const createNumber = ({x, y}) => {
 const canvas = SVG('app').size(CELLS_COUNT * cellWidth, CELLS_COUNT * cellWidth);
 
 
+const whileForward = ({fn, begin, val}) => {
+  // let i = initCell.val;
+  let i = begin;
+  while (i <= val) {
+    fn(i);
+    i = i + 1;
+  }
+}
+
+const whileBack = ({fn, begin, val}) => {
+  let i = begin;
+  while (i >= val) {
+    fn(i);
+    i = i - 1;
+  }
+}
+
+
 class Game {
   constructor() {
     this.cells = {};
+    this.pathCells = {};
   }
 
   addCell(cell) {
@@ -72,13 +91,101 @@ class Game {
     }
   }
 
-  placeRandom(factoryMethod) {
+  drawMovablePath({x, y, focused}) {
+    console.log('drawMovablePath', {x, y, focused});
+    this.pathDestCoords = focused ? {x, y} : null;
+    if (!this.pathDestCoords) {
+      Object.keys(this.pathCells).forEach((key) => this.pathCells[key].togglePath(false));
+      this.pathCells = {};
+    }
+  }
+
+  placeRandom(factory) {
     const x = getRandomFromArray(Object.keys(this.cells));
     const y = getRandomFromArray(Object.keys(this.cells[0]));
-    const el = new ActiveObject({x, y, factoryMethod});
+    const el = new factory({x, y});
     setTimeout(() => {
       window.scroll(el.elem.x() - window.screen.width / 2, el.elem.y() - window.screen.height / 2)
     }, 500);
+  }
+
+  mouseOverCell(initCell) {
+    if (this.lastCell) {
+      this.lastCell.toggleDestinationPoint(false);
+    }
+
+    if (!this.pathDestCoords) {
+      return;
+    }
+
+    this.lastCell = initCell;
+    this.lastCell.toggleDestinationPoint(true)
+
+    let iterators = [];
+    const { x, y } = this.pathDestCoords;
+    let iterator = whileForward;
+    if (initCell.x > x) {
+      iterator = whileBack;
+    }
+    iterator.getterFn = (i) => this.cells[i][y]
+    iterator.begin = initCell.x;
+    iterator.val = x;
+    iterators.push(iterator);
+
+    let iteratorY = whileForward;
+    if (initCell.y > y) {
+      iteratorY = whileBack;
+    }
+    iteratorY.getterFn = (i) => this.cells[initCell.x][i]
+    iteratorY.begin = initCell.y;
+    iteratorY.val = y;
+    iterators.push(iteratorY);
+
+    // if (Math.abs(initCell.x - x) < Math.abs(initCell.y - y)) {
+    //   iterators.reverse();
+    // }
+
+    const newPathCells = {};
+    console.log(iterators);
+    iterators.forEach(iterator => {
+      const {begin, val} = iterator;
+      iterator({
+        fn: (i) => {
+          const cell = iterator.getterFn(i);
+
+          cell.togglePath(true);
+          const key = `${cell.x}${cell.y}`;
+          if (!this.pathCells[key]) {
+            this.pathCells[key] = cell;
+          }
+          newPathCells[key] = {x: cell.x, y: cell.y};
+        },
+        begin,
+        val
+      });
+    })
+
+    Object.keys(this.pathCells).filter((key) => !newPathCells[key]).forEach(key => {
+      this.pathCells[key].togglePath(false);
+    });
+    // for (let i = initCell.x; i <= x; i = i + xMul) {
+    //   const cell = this.cells[i][initCell.y];
+    //   cell.togglePath(true);
+    //   this.pathCells.push(cell);
+    //   newPathCells[`${cell}`]
+    // }
+
+    // for (let g = initCell.y; g <= y; g = g + yMul) {
+    //   const cell = this.cells[x][g];
+    //   cell.togglePath(true);
+    //   this.pathCells.push(cell);
+    // }
+  }
+
+  mouseOutCell() {
+    if (!this.pathDestCoords) {
+      return;
+    }
   }
 }
 
@@ -104,14 +211,22 @@ class ActiveObject {
     if (this.focused) {
       return
     }
+    this._animateOver();
+  }
+
+  _animateOver() {
     this.elem.animate({ease: '<', duration: 100}).attr({'fill-opacity': 0.9});
+  }
+
+  _animateOut() {
+    this.elem.animate({ease: '<', duration: 100}).attr({'fill-opacity': 0.8});
   }
 
   onMouseOut() {
     if (this.focused) {
       return
     }
-    this.elem.animate({ease: '<', duration: 100}).attr({'fill-opacity': 0.8});
+    this._animateOut();
   }
 
   toggleFocus() {
@@ -131,28 +246,29 @@ class ActiveObject {
 }
 
 
-class Cell {
+class Circle extends ActiveObject {
   constructor({x, y}) {
-    this.cell = createCell({x, y});
+    super({x, y, factoryMethod: createCircle});
+  }
+
+  toggleFocus() {
+    super.toggleFocus();
+    game.drawMovablePath(this);
+  }
+};
+
+
+class Cell extends ActiveObject {
+  constructor({x, y}) {
+    super({x, y, factoryMethod: createCell});
     this.number = createNumber({x, y});
-    this.x = x;
-    this.y = y;
-    this.cell.click(this.onClick.bind(this));
-    this.cell.mouseover(this.onMouseOver.bind(this));
-    this.cell.mouseout(this.onMouseOut.bind(this));
-    this.focused = false;
+    this.pathMarker = createCircle({x, y, exactWidth: 8, fillOpacity: 0});
+    this.destinationPoint = createCircle({x, y, exactWidth: 16, fillOpacity: 0});
   }
 
-  getCoords() {
-    const {x, y} = this;
-    return {x, y};
-  }
-
-  onMouseOver() {
-    if (this.focused) {
-      return
-    }
+  _animateOver() {
     this.number.animate({ease: '<', duration: 100}).attr({'fill-opacity': 0.2});
+    game.mouseOverCell(this);
   }
 
   onMouseOut() {
@@ -160,23 +276,34 @@ class Cell {
       return
     }
     this.number.animate({ease: '<', duration: 100}).attr({'fill-opacity': 0});
+    game.mouseOutCell(this);
   }
 
   toggleFocus() {
     if (this.focused) {
-      this.cell.animate({ease: '>', duration: 200}).fill(CELL_COLOR);
+      this.elem.animate({ease: '>', duration: 200}).fill(CELL_COLOR);
       this.number.animate({ease: '>', duration: 200}).fill(NUMBER_COLOR).attr({'fill-opacity': 0.2});
     } else {
-      this.cell.animate({ease: '>', duration: 200}).fill('#4599C6');
+      this.elem.animate({ease: '>', duration: 200}).fill('#4599C6');
       this.number.animate({ease: '>', duration: 200}).fill('#fff').attr({'fill-opacity': 0.9});
     }
     this.focused = !this.focused;
   }
 
-  onClick() {
-    const {x, y} = this;
-    const key = `${x}-${y}`;
-    this.toggleFocus();
+  togglePath(show) {
+    if (show) {
+      this.pathMarker.attr({'fill-opacity': 0.5});
+    } else {
+      this.pathMarker.attr({'fill-opacity': 0});
+    }
+  }
+
+  toggleDestinationPoint(show) {
+    if (show) {
+      this.destinationPoint.attr({'fill-opacity': 0.5});
+    } else {
+      this.destinationPoint.attr({'fill-opacity': 0});
+    }
   }
 }
 
@@ -187,4 +314,4 @@ sequenceNumbers(CELLS_COUNT).forEach(x => {
   });
 });
 
-game.placeRandom(createCircle);
+game.placeRandom(Circle);
