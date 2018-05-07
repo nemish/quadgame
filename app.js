@@ -58,8 +58,7 @@ const createNumber = ({x, y}) => {
 const canvas = SVG('app').size(CELLS_COUNT * cellWidth, CELLS_COUNT * cellWidth);
 
 
-const whileForward = ({fn, begin, val}) => {
-  // let i = initCell.val;
+const whileForward = () => ({fn, begin, val}) => {
   let i = begin;
   while (i <= val) {
     fn(i);
@@ -67,7 +66,7 @@ const whileForward = ({fn, begin, val}) => {
   }
 }
 
-const whileBack = ({fn, begin, val}) => {
+const whileBack = () => ({fn, begin, val}) => {
   let i = begin;
   while (i >= val) {
     fn(i);
@@ -123,31 +122,37 @@ class Game {
 
     let iterators = [];
     const { x, y } = this.pathDestCoords;
-    let iterator = whileForward;
+    let iteratorX = whileForward();
     if (initCell.x > x) {
-      iterator = whileBack;
+      iteratorX = whileBack();
     }
-    iterator.getterFn = (i) => this.cells[i][y]
-    iterator.begin = initCell.x;
-    iterator.val = x;
-    iterators.push(iterator);
+    iteratorX.getterFn = (i) => this.cells[i][y]
+    iteratorX.reverse = () => {
+      iteratorX.getterFn = (i) => this.cells[i][initCell.y]
+    }
+    iteratorX.begin = initCell.x;
+    iteratorX.val = x;
+    iterators.push(iteratorX);
 
-    let iteratorY = whileForward;
+    let iteratorY = whileForward();
     if (initCell.y > y) {
-      iteratorY = whileBack;
+      iteratorY = whileBack();
     }
     iteratorY.getterFn = (i) => this.cells[initCell.x][i]
+    iteratorY.reverse = () => {
+      iteratorY.getterFn = (i) => this.cells[x][i]
+    }
     iteratorY.begin = initCell.y;
     iteratorY.val = y;
     iterators.push(iteratorY);
 
-    // if (Math.abs(initCell.x - x) < Math.abs(initCell.y - y)) {
-    //   iterators.reverse();
-    // }
+    if (Math.abs(initCell.x - x) < Math.abs(initCell.y - y)) {
+      iterators.forEach(iterator => iterator.reverse());
+    }
 
     const newPathCells = {};
-    console.log(iterators);
     iterators.forEach(iterator => {
+      console.log(newPathCells);
       const {begin, val} = iterator;
       iterator({
         fn: (i) => {
@@ -168,18 +173,6 @@ class Game {
     Object.keys(this.pathCells).filter((key) => !newPathCells[key]).forEach(key => {
       this.pathCells[key].togglePath(false);
     });
-    // for (let i = initCell.x; i <= x; i = i + xMul) {
-    //   const cell = this.cells[i][initCell.y];
-    //   cell.togglePath(true);
-    //   this.pathCells.push(cell);
-    //   newPathCells[`${cell}`]
-    // }
-
-    // for (let g = initCell.y; g <= y; g = g + yMul) {
-    //   const cell = this.cells[x][g];
-    //   cell.togglePath(true);
-    //   this.pathCells.push(cell);
-    // }
   }
 
   mouseOutCell() {
