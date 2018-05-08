@@ -1,5 +1,5 @@
 import { ActiveObject } from './ActiveObject';
-import { createCircle } from './factories';
+import { createCircle, circleCellPos } from './factories';
 import { gameInstance as game } from '@/game';
 
 export class Circle extends ActiveObject {
@@ -9,6 +9,34 @@ export class Circle extends ActiveObject {
 
   toggleFocus() {
     super.toggleFocus();
-    game.drawMovablePath(this);
+    game.setMovePath(this);
+  }
+
+  moveTo({x, y, reversed}) {
+    console.log('moveTo', x, y, reversed);
+    const stages = [];
+    if (reversed) {
+      stages.push(
+        { x: this.x, y },
+        { x, y }
+      );
+    } else {
+      stages.push(
+        { x, y: this.y },
+        { x, y }
+      );
+    }
+
+    this.toggleFocus();
+    stages.forEach(st => {
+      const cx = circleCellPos({param: st.x});
+      const cy = circleCellPos({param: st.y});
+      this.elem
+        .animate({ease: '>', duration: 200})
+        .cx(cx)
+        .cy(cy);
+    });
+    this.x = x;
+    this.y = y;
   }
 };

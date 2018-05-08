@@ -16,25 +16,9 @@ export class ActiveObject {
   }
 
   onMouseOver() {
-    if (this.focused) {
-      return
-    }
-    this._animateOver();
-  }
-
-  _animateOver() {
-    this.elem.animate({ease: '<', duration: 100}).attr({'fill-opacity': 0.9});
-  }
-
-  _animateOut() {
-    this.elem.animate({ease: '<', duration: 100}).attr({'fill-opacity': 0.8});
   }
 
   onMouseOut() {
-    if (this.focused) {
-      return
-    }
-    this._animateOut();
   }
 
   toggleFocus() {
@@ -47,8 +31,6 @@ export class ActiveObject {
   }
 
   onClick() {
-    const {x, y} = this;
-    const key = `${x}-${y}`;
     this.toggleFocus();
   }
 }

@@ -36,11 +36,14 @@ export class Game {
     }
   }
 
-  drawMovablePath({x, y, focused}) {
+  setMovePath(obj) {
+    const {x, y, focused} = obj;
     this.pathDestCoords = focused ? {x, y} : null;
+    this.activeObj = obj;
     if (!this.pathDestCoords) {
       Object.keys(this.pathCells).forEach((key) => this.pathCells[key].togglePath(false));
       this.pathCells = {};
+      this.activeObj = null;
     }
   }
 
@@ -53,7 +56,7 @@ export class Game {
     }, 500);
   }
 
-  mouseOverCell(initCell) {
+  redrawPathToCell(initCell) {
     if (this.lastCell) {
       this.lastCell.toggleDestinationPoint(false);
     }
@@ -63,10 +66,16 @@ export class Game {
     }
 
     this.lastCell = initCell;
-    this.lastCell.toggleDestinationPoint(true)
 
     let iterators = [];
     const { x, y } = this.pathDestCoords;
+
+    if (this.lastCell.x === +x && this.lastCell.y === +y) {
+      return
+    }
+
+    this.lastCell.toggleDestinationPoint(true)
+
     let iteratorX = whileForward();
     if (initCell.x > x) {
       iteratorX = whileBack();
@@ -93,6 +102,7 @@ export class Game {
 
     if (Math.abs(initCell.x - x) < Math.abs(initCell.y - y)) {
       iterators.forEach(iterator => iterator.reverse());
+      this.pathDestCoords.reversed = true;
     }
 
     const newPathCells = {};
@@ -101,6 +111,9 @@ export class Game {
       iterator({
         fn: (i) => {
           const cell = iterator.getterFn(i);
+          if (cell.x === +x && cell.y === +y) {
+            return;
+          }
 
           cell.togglePath(true);
           const key = `${cell.x}${cell.y}`;
@@ -119,10 +132,12 @@ export class Game {
     });
   }
 
-  mouseOutCell() {
-    if (!this.pathDestCoords) {
-      return;
+  moveActiveObject() {
+    if (!this.activeObj) {
+      return
     }
+    const {x, y} = this.lastCell;
+    this.activeObj.moveTo({x, y, reversed: this.pathDestCoords.reversed});
   }
 }
 

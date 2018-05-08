@@ -1,13 +1,18 @@
-import { CELL_COLOR, NUMBER_COLOR, cellWidth, rectWidth } from './constants';
+import { CELL_COLOR, NUMBER_COLOR, CIRCLE_COLOR, cellWidth, rectWidth } from './constants';
 import { gameInstance } from '@/game';
 
-export const createCircle = ({x, y, exactWidth, fillOpacity}) => {
-  const width = exactWidth || (cellWidth - (cellWidth / 2));
-  return gameInstance.canvas.circle(width)
-    .x(x * cellWidth + (cellWidth / 2) - (width / 2))
-    .y(y * cellWidth + (cellWidth / 2) - (width / 2))
-    .fill('#EC6533')
+
+export const circleCellPos = ({param}) => param * cellWidth + (cellWidth / 2)
+
+export const createCircle = ({x, y, exactWidth=null, fillOpacity}) => {
+  const width = exactWidth === null ? (cellWidth - (cellWidth / 2)) : exactWidth;
+  const circle = gameInstance.canvas.circle(width)
+    .cx(circleCellPos({param: x, width}))
+    .cy(circleCellPos({param: y, width}))
+    .fill(CIRCLE_COLOR)
     .attr({ 'fill-opacity': fillOpacity });
+  circle.width = width;
+  return circle;
 }
 
 export const createQuad = ({x, y}) => {
