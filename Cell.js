@@ -13,17 +13,24 @@ export class Cell extends ActiveObject {
     this.destinationPointShow = false;
   }
 
-  onMouseOver() {
-    this._toggleNumber(true);
-    game.redrawPathToCell(this);
-  }
+  // onMouseOver() {
+  //   this._toggleNumber(true);
+  //   game.redrawPathToCell(this);
+  // }
 
   _toggleNumber(show) {
     this.number.animate({ease: '<', duration: 100}).attr({'fill-opacity': show ? 0.2 : 0});
   }
 
-  onMouseOut() {
-    this._toggleNumber(false);
+  // onMouseOut() {
+  //   this._toggleNumber(false);
+  // }
+
+  toggleHover(hover) {
+    this._toggleNumber(hover);
+    if (hover) {
+      game.redrawPathToCell(this);
+    }
   }
 
   toggleFocus() {

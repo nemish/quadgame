@@ -33,4 +33,6 @@ export class ActiveObject {
   onClick() {
     this.toggleFocus();
   }
+
+  moveTo() {}
 }

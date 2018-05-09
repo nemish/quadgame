@@ -15,6 +15,21 @@ export class Game {
     this.cells = {};
     this.pathCells = {};
     this.canvas = SVG(root).size(CELLS_COUNT * cellWidth, CELLS_COUNT * cellWidth);
+    this._hoverCell = null;
+  }
+
+  get hoverCell() {
+    return this._hoverCell;
+  }
+
+  set hoverCell(cell) {
+    if (this._hoverCell !== cell) {
+      if (this._hoverCell) {
+        this._hoverCell.toggleHover(false);
+      }
+      this._hoverCell = cell;
+      this._hoverCell.toggleHover(true);
+    }
   }
 
   init() {
@@ -23,8 +38,19 @@ export class Game {
         this.addCell(new Cell({x, y}));
       });
     });
+    this.canvas.mousemove(this.onMouseMove.bind(this));
 
     this.placeRandom(Circle);
+  }
+
+  onMouseMove(e) {
+    const {pageX, pageY} = e;
+    const x = Math.floor(pageX / cellWidth);
+    const y = Math.floor(pageY / cellWidth);
+
+    if (!this.hoverCell || (this.hoverCell && (this.hoverCell.x !== x || this.hoverCell.y !== y))) {
+      this.hoverCell = this.cells[x][y];
+    }
   }
 
   addCell(cell) {
@@ -100,11 +126,6 @@ export class Game {
     iteratorY.val = y;
     iterators.push(iteratorY);
 
-    if (Math.abs(initCell.x - x) < Math.abs(initCell.y - y)) {
-      iterators.forEach(iterator => iterator.reverse());
-      this.pathDestCoords.reversed = true;
-    }
-
     const newPathCells = {};
     iterators.forEach(iterator => {
       const {begin, val} = iterator;
@@ -137,7 +158,7 @@ export class Game {
       return
     }
     const {x, y} = this.lastCell;
-    this.activeObj.moveTo({x, y, reversed: this.pathDestCoords.reversed});
+    this.activeObj.moveTo({x, y});
   }
 }
 

@@ -13,26 +13,17 @@ export class Circle extends ActiveObject {
   }
 
   moveTo({x, y, reversed}) {
-    console.log('moveTo', x, y, reversed);
-    const stages = [];
-    if (reversed) {
-      stages.push(
-        { x: this.x, y },
-        { x, y }
-      );
-    } else {
-      stages.push(
-        { x, y: this.y },
-        { x, y }
-      );
-    }
+    const stages = [
+      { x, y: this.y },
+      { x, y }
+    ];
 
     this.toggleFocus();
     stages.forEach(st => {
       const cx = circleCellPos({param: st.x});
       const cy = circleCellPos({param: st.y});
       this.elem
-        .animate({ease: '>', duration: 200})
+        .animate({ease: '>', duration: 300})
         .cx(cx)
         .cy(cy);
     });
