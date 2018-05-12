@@ -16,20 +16,57 @@ module.exports = {
     }
   },
   module: {
-    rules: [{
-      test: /\.styl$/,
-      use: [
-        'style-loader',
-        'css-loader',
-        'stylus-loader',
-        // {
-        //   loader: 'stylus-loader',
-        //   options: {
-        //     use: [stylus_plugin()],
-        //   },
-        // },
-      ],
-    }]
+    rules: [
+      {
+        test: /\.styl$/,
+        use: [
+          'style-loader',
+          'css-loader',
+          'stylus-loader'
+        ],
+      },
+      {
+          test: /\.css$/,
+          use: [
+            'vue-style-loader',
+            'css-loader'
+          ],
+      },
+      {
+          test: /\.vue$/,
+          loader: 'vue-loader',
+      },
+      {
+          test: /\.js$/,
+          loader: 'babel-loader',
+          exclude: /node_modules/,
+          query: {
+            presets:[ 'es2015', 'stage-2' ]
+          }
+      },
+      {
+          test: /\.(png|jpg|gif|svg)$/,
+          loader: 'file-loader',
+          options: {
+            name: '[name].[ext]?[hash]'
+          }
+      }
+    ]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   },
   plugins: [
     new HtmlWebpackPlugin({

@@ -1,9 +1,14 @@
-import './app.styl';
-import { createGameInstance } from '@/game';
+import Vue from 'vue';
+import app from '@/components/app.vue';
+import { genId } from '@/utils';
 
-const div = document.createElement('div', {id: 'app'});
-div.setAttribute('id', 'app');
+const APP_ELEMENT_ID = 'app-' + genId();
+
+const div = document.createElement('div');
+div.setAttribute('id', APP_ELEMENT_ID);
 document.body.appendChild(div);
 
-const game = createGameInstance({root: 'app'});
-game.init();
+new Vue({
+  el: '#' + APP_ELEMENT_ID,
+  render: h => h(app)
+});

@@ -1,9 +1,10 @@
 
 export class ActiveObject {
-  constructor({x, y, factoryMethod}) {
+  constructor({x, y, game, factoryMethod}) {
     this.elem = factoryMethod({x, y});
     this.x = x;
     this.y = y;
+    this.game = game;
     this.elem.click(this.onClick.bind(this));
     this.elem.mouseover(this.onMouseOver.bind(this));
     this.elem.mouseout(this.onMouseOut.bind(this));

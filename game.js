@@ -1,13 +1,13 @@
 import Svg from 'svg.js';
-import { Cell } from './Cell';
+import { Cell } from '@/Cell';
 import {
   whileBack,
   whileForward,
   getRandomFromArray,
   sequenceNumbers
-} from './utils';
-import { Circle } from '@/Circle';
-import { CELLS_COUNT, cellWidth } from './constants';
+} from '@/utils';
+import { BasicItem } from '@/BasicItem';
+import { CELLS_COUNT, cellWidth } from '@/constants';
 
 
 export class Game {
@@ -16,6 +16,7 @@ export class Game {
     this.pathCells = {};
     this.canvas = SVG(root).size(CELLS_COUNT * cellWidth, CELLS_COUNT * cellWidth);
     this._hoverCell = null;
+    this.events = {};
   }
 
   get hoverCell() {
@@ -40,7 +41,25 @@ export class Game {
     });
     this.canvas.mousemove(this.onMouseMove.bind(this));
 
-    this.placeRandom(Circle);
+    this.placeRandom(BasicItem);
+  }
+
+  on(eventName, cb) {
+    if (!this.events[eventName]) {
+      this.events[eventName] = [];
+    }
+    this.events[eventName].push(cb);
+  }
+
+  watchers(eventName, payload) {
+    const callbacks = this.events[eventName] || [];
+    callbacks.forEach(cb => {
+      try {
+        cb(payload);
+      } catch (err) {
+        console.log('listener error', err);
+      }
+    });
   }
 
   onMouseMove(e) {
@@ -153,12 +172,19 @@ export class Game {
     });
   }
 
+  turnOffPath() {
+    Object.keys(this.pathCells).forEach(key => {
+      this.pathCells[key].togglePath(false);
+    });
+  }
+
   moveActiveObject() {
     if (!this.activeObj) {
       return
     }
     const {x, y} = this.lastCell;
     this.activeObj.moveTo({x, y});
+    this.turnOffPath();
   }
 }
 
