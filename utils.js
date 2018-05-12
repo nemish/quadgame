@@ -1,15 +1,15 @@
 
-export const whileForward = () => ({fn, begin, val}) => {
+export const whileForward = () => ({fn, begin, limit}) => {
   let i = begin;
-  while (i <= val) {
+  while (i <= limit) {
     fn(i);
     i = i + 1;
   }
 }
 
-export const whileBack = () => ({fn, begin, val}) => {
+export const whileBack = () => ({fn, begin, limit}) => {
   let i = begin;
-  while (i >= val) {
+  while (i >= limit) {
     fn(i);
     i = i - 1;
   }

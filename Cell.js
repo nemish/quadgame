@@ -13,18 +13,9 @@ export class Cell extends ActiveObject {
     this.destinationPointShow = false;
   }
 
-  // onMouseOver() {
-  //   this._toggleNumber(true);
-  //   game.redrawPathToCell(this);
-  // }
-
   _toggleNumber(show) {
     this.number.animate({ease: '<', duration: 100}).attr({'fill-opacity': show ? 0.2 : 0});
   }
-
-  // onMouseOut() {
-  //   this._toggleNumber(false);
-  // }
 
   toggleHover(hover) {
     this._toggleNumber(hover);
@@ -34,13 +25,6 @@ export class Cell extends ActiveObject {
   }
 
   toggleFocus() {
-    // if (this.focused) {
-    //   this.elem.animate({ease: '>', duration: 200}).fill(CELL_COLOR);
-    //   this.number.animate({ease: '>', duration: 200}).fill(NUMBER_COLOR).attr({'fill-opacity': 0.2});
-    // } else {
-    //   this.elem.animate({ease: '>', duration: 200}).fill('#4599C6');
-    //   this.number.animate({ease: '>', duration: 200}).fill('#fff').attr({'fill-opacity': 0.9});
-    // }
     this.focused = !this.focused;
   }
 
@@ -58,7 +42,6 @@ export class Cell extends ActiveObject {
       this.destinationPoint.fill(NUMBER_COLOR);
     } else {
       game.moveActiveObject();
-      // this.offDestinationPoint();
     }
   }
 

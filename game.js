@@ -13,10 +13,13 @@ import { CELLS_COUNT, cellWidth } from '@/constants';
 export class Game {
   constructor({ root }) {
     this.cells = {};
+    this.currentTurn = 1;
     this.pathCells = {};
     this.canvas = SVG(root).size(CELLS_COUNT * cellWidth, CELLS_COUNT * cellWidth);
     this._hoverCell = null;
     this.events = {};
+    this.playableObjects = {};
+    this.moveCell = null;
   }
 
   get hoverCell() {
@@ -95,19 +98,25 @@ export class Game {
   placeRandom(factory) {
     const x = getRandomFromArray(Object.keys(this.cells));
     const y = getRandomFromArray(Object.keys(this.cells[0]));
-    const el = new factory({x, y});
+    const el = this.createPlayeableItem({x, y, factory});
     setTimeout(() => {
       window.scroll(el.elem.x() - window.screen.width / 2, el.elem.y() - window.screen.height / 2)
     }, 500);
   }
 
+  createPlayeableItem({x, y, factory}) {
+    const el = new factory({x, y});
+    this.playableObjects[el.id] = el;
+    return el
+  }
+
   redrawPathToCell(initCell) {
-    if (this.lastCell) {
-      this.lastCell.toggleDestinationPoint(false);
+    if (!this.pathDestCoords || !this.activeObj) {
+      return;
     }
 
-    if (!this.pathDestCoords) {
-      return;
+    if (this.lastCell) {
+      this.lastCell.toggleDestinationPoint(false);
     }
 
     this.lastCell = initCell;
@@ -130,7 +139,7 @@ export class Game {
       iteratorX.getterFn = (i) => this.cells[i][initCell.y]
     }
     iteratorX.begin = initCell.x;
-    iteratorX.val = x;
+    iteratorX.limit = x;
     iterators.push(iteratorX);
 
     let iteratorY = whileForward();
@@ -142,30 +151,62 @@ export class Game {
       iteratorY.getterFn = (i) => this.cells[x][i]
     }
     iteratorY.begin = initCell.y;
-    iteratorY.val = y;
+    iteratorY.limit = y;
     iterators.push(iteratorY);
 
     const newPathCells = {};
-    iterators.forEach(iterator => {
-      const {begin, val} = iterator;
+    const lists = [[], []];
+    iterators.forEach((iterator, index) => {
+      const {begin, limit} = iterator;
       iterator({
         fn: (i) => {
           const cell = iterator.getterFn(i);
-          if (cell.x === +x && cell.y === +y) {
+          const cx = cell.x;
+          const cy = cell.y;
+          const cz = cell.z;
+          if (cx === +x && cy === +y) {
             return;
           }
 
+          if (!this.activeObj.canMoveInto({x: cx, y: cy})) {
+            return;
+          }
+          lists[index].push({cx, cy});
+
+          if (!this.moveCell) {
+            this.moveCell = {x: cx, y: cy};
+          }
+
           cell.togglePath(true);
-          const key = `${cell.x}${cell.y}`;
+          const key = `${cx}${cy}`;
           if (!this.pathCells[key]) {
             this.pathCells[key] = cell;
           }
-          newPathCells[key] = {x: cell.x, y: cell.y};
+          newPathCells[key] = {x: cx, y: cy};
         },
         begin,
-        val
+        limit
       });
     });
+
+    lists.forEach((l, index) => {
+      const key = index === 0 ? 'cx' : 'cy';
+      l.sort((prev, next) => Math.abs(prev[key] - next[key]) > 0);
+    });
+
+    let el = null;
+    if (lists[0].length) {
+      if (lists[0].length < Math.abs(x - this.lastCell.x)) {
+        el = lists[0][lists[0].length - 1];
+      } else {
+        el = lists[1][lists[1].length - 1];
+      }
+    }
+
+    this.moveCell = null;
+    if (el) {
+      this.moveCell = {x: el.cx, y: el.cy};
+    }
 
     Object.keys(this.pathCells).filter((key) => !newPathCells[key]).forEach(key => {
       this.pathCells[key].togglePath(false);
@@ -179,12 +220,13 @@ export class Game {
   }
 
   moveActiveObject() {
-    if (!this.activeObj) {
+    if (!this.activeObj || !this.moveCell) {
       return
     }
-    const {x, y} = this.lastCell;
+    const {x, y} = this.moveCell;
     this.activeObj.moveTo({x, y});
     this.turnOffPath();
+    this.moveCell = null;
   }
 }
 

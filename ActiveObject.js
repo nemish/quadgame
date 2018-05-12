@@ -1,6 +1,8 @@
+import shortid from 'shortid';
 
 export class ActiveObject {
   constructor({x, y, game, factoryMethod}) {
+    this.id = shortid();
     this.elem = factoryMethod({x, y});
     this.x = x;
     this.y = y;
@@ -11,17 +13,18 @@ export class ActiveObject {
     this.focused = false;
   }
 
+  /** Abstract */
+  onMouseOver() {}
+
+  onMouseOut() {}
+
+  moveTo() {}
+  /** **/
+
   getCoords() {
     const {x, y} = this;
     return {x, y};
   }
-
-  onMouseOver() {
-  }
-
-  onMouseOut() {
-  }
-
   toggleFocus() {
     if (this.focused) {
       this.elem.animate({ease: '>', duration: 200}).stroke({width: 0});
@@ -34,6 +37,4 @@ export class ActiveObject {
   onClick() {
     this.toggleFocus();
   }
-
-  moveTo() {}
 }
