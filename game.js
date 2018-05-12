@@ -55,6 +55,10 @@ export class Game {
   }
 
   watchers(eventName, payload) {
+    if (eventName === 'NEXT_TURN') {
+      this.currentTurn++;
+    }
+
     const callbacks = this.events[eventName] || [];
     callbacks.forEach(cb => {
       try {

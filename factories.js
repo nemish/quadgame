@@ -4,8 +4,8 @@ import { gameInstance } from '@/game';
 
 export const circleCellPos = ({param}) => param * cellWidth + (cellWidth / 2)
 
-export const createCircle = ({x, y, exactWidth=null, fillOpacity}) => {
-  const width = exactWidth === null ? (cellWidth - (cellWidth / 2)) : exactWidth;
+export const createCircle = ({x, y, exactWidth=null, ratio=2, fillOpacity}) => {
+  const width = exactWidth === null ? (cellWidth - (cellWidth / ratio)) : exactWidth;
   const circle = gameInstance.canvas.circle(width)
     .cx(circleCellPos({param: x, width}))
     .cy(circleCellPos({param: y, width}))

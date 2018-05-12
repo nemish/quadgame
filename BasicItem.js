@@ -8,11 +8,14 @@ export class BasicItem extends Circle {
     super(props);
     this.level = level;
     this.movePoints = 10;
+    game.on('NEXT_TURN', () => {
+      this.movePoints = 10;
+    });
   }
 
   toggleFocus() {
     super.toggleFocus();
-    const eventName = this.focused ? 'ITEM_FOCUSED' : 'ITEM_UNFOCUSED'
+    const eventName = this.focused ? 'ITEM_FOCUSED' : 'ITEM_UNFOCUSED';
     game.watchers(eventName, this);
     game.setMovePath(this);
   }
@@ -35,9 +38,9 @@ export class BasicItem extends Circle {
 
     const distance = this.getDistance({x, y});
     this.movePoints -= distance;
-    // if (this.movePoints <= 0) {
-    //   this.events['MOVE_POINTS_EMPTY']
-    // }
+    if (this.movePoints <= 0) {
+      game.watchers('MOVE_POINTS_EMPTY', item);
+    }
 
     stages.forEach(st => {
       const cx = circleCellPos({param: st.x});

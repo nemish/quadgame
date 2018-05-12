@@ -13,6 +13,10 @@ export class ActiveObject {
     this.focused = false;
   }
 
+  getNormalizedSvgStr() {
+    return `<svg height='64' width='64'>${this.elem.clone().cx(32).cy(32).svg()}</svg>`;
+  }
+
   /** Abstract */
   onMouseOver() {}
 

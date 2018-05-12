@@ -7,7 +7,7 @@ export class Cell extends ActiveObject {
   constructor({x, y}) {
     super({x, y, factoryMethod: createCell});
     this.number = createNumber({x, y});
-    this.pathMarker = createCircle({x, y, exactWidth: 8, fillOpacity: 0});
+    this.pathMarker = createCircle({x, y, ratio: 1.1, fillOpacity: 0});
     this.destinationPoint = createCircle({x, y, exactWidth: 0, fillOpacity: 0.2});
     this.destinationPoint.mouseover(this.onMouseOver.bind(this));
     this.destinationPointShow = false;
