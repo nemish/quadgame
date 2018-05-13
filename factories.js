@@ -33,7 +33,7 @@ export const createCell = ({x, y}) => {
 
 export const createNumber = ({x, y}) => {
   return gameInstance.canvas.text(`${y}-${x}`)
-    .x(x * cellWidth + 4).y(y * cellWidth + 4)
+    .x(x * cellWidth + 4).y(y * cellWidth + 12)
     .font({
       family: 'Helvetica',
       size: 8

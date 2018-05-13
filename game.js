@@ -104,7 +104,7 @@ export class Game {
     const y = getRandomFromArray(Object.keys(this.cells[0]));
     const el = this.createPlayeableItem({x, y, factory});
     setTimeout(() => {
-      window.scroll(el.elem.x() - window.screen.width / 2, el.elem.y() - window.screen.height / 2)
+      el.scrollIntoView();
     }, 500);
   }
 

@@ -1,24 +1,34 @@
 <template>
   <div id='ui-panel'>
-    <button class='btn' @click='nextTurn'>{{nextTurnText}}</button>
-    <button class='btn bg-green' @click='toggleItems'>Show items</button>
-    <div v-if='showItems' class='items-container'>
-        <div class='active-item' v-for='(item, index) in itemsList' :key='item.id'>
-            <div v-html='item.getNormalizedSvgStr()'></div>
-        </div>
+    <div class='bottom-row'>
+        <button class='btn' @click='nextTurn'>{{nextTurnText}}</button>
+        <button :class='["btn", showItems ? "bg-yellow" : "bg-green"]' @click='toggleItems'>{{toggleItemsText}}</button>
+        <transition
+            name="custom-classes-transition"
+            enter-active-class="animated flipInX"
+            leave-active-class="animated flipOutX"
+        >
+            <div v-if='showItems' class='items-container'>
+                <div class='active-item' v-for='(el, index) in itemsList' :key='el.id'>
+                    <active-item :el=el />
+                </div>
+            </div>
+        </transition>
+        <transition
+            name="custom-classes-transition"
+            enter-active-class="animated flipInX"
+            leave-active-class="animated flipOutX"
+        >
+            <active-item v-if='item && !showItems' :el=item />
+        </transition>
     </div>
     <div class='turn-container'>TURN: {{currentTurn}}</div>
-    <transition
-        name="custom-classes-transition"
-        enter-active-class="animated flipInX"
-        leave-active-class="animated flipOutX"
-    >
-        <div v-if='item' class='params-container'>Coords: {{item.x}} - {{item.y}}. Level: {{item.level}}</div>
-    </transition>
   </div>
 </template>
 
 <script>
+import Vue from 'vue';
+import ActiveItem from '@/components/ActiveItem.vue';
 import { gameInstance as game } from '@/game';
 
 export default {
@@ -34,6 +44,9 @@ export default {
         type: Number
     }
   },
+  components: {
+    'active-item': ActiveItem
+  },
   data () {
     return {
         showItems: false
@@ -45,6 +58,9 @@ export default {
     },
     nextTurn() {
         game.watchers('NEXT_TURN');
+    },
+    focusItem(item) {
+        item.scrollIntoView();
     }
   },
   computed: {
@@ -53,6 +69,9 @@ export default {
     },
     nextTurnText() {
         return 'Next turn';
+    },
+    toggleItemsText() {
+        return this.showItems ? 'Hide items' : 'Show items';
     }
   }
 }
@@ -69,41 +88,30 @@ export default {
     display flex
 
 .params-container
-    margin 10px
-    padding 10px
+    margin 8px
+    padding 8px
     color rgba(0,0,0,0.5)
     border-radius 5px
     background #fff
     box-shadow 0 1px 3px 0 rgba(0,0,0,0.3)
+    display flex
+    align-items center
+    justify-content center
+
+    & p
+        margin 0
+
+.bottom-row
+    display flex
+    height 64px
+
+.svg-icon
+    height 32px
+
 
 .turn-container
     position absolute
-    top -10px
-    left 10px
-
-btnFactory(bgColor)
-    outline 0
-    margin 10px
-    padding 10px
-    font-size 1.2rem
-    border 0
-    color rgba(255,255,255,0.5)
-    border-radius 5px
-    background-color bgColor
-    box-shadow 0 1px 3px 0 rgba(0,0,0,0.3)
-    cursor pointer
-    transition color .5s, background-color .5s
-    &:hover
-        color rgba(255,255,255,0.8)
-        background-color darken(@background-color, 10%)
-
-.btn
-    btnFactory(#5A73EE)
-
-.bg-green
-    background-color #36BF4C
-    &:hover
-        color rgba(255,255,255,0.8)
-        background-color darken(#36BF4C, 10%)
+    top -8px
+    left 8px
 
 </style>

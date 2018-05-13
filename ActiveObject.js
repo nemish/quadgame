@@ -14,7 +14,17 @@ export class ActiveObject {
   }
 
   getNormalizedSvgStr() {
-    return `<svg height='64' width='64'>${this.elem.clone().cx(32).cy(32).svg()}</svg>`;
+    const clone = this.elem.clone().cx(16).cy(16);
+    clone.width(16);
+    return `<svg height='32' width='32'>${clone.svg()}</svg>`;
+  }
+
+  scrollIntoView() {
+    window.scrollTo({
+      left: this.elem.x() - window.innerWidth / 2,
+      top: this.elem.y() - window.innerHeight / 2,
+      behavior: "smooth"
+    });
   }
 
   /** Abstract */
