@@ -1,6 +1,6 @@
 <template>
   <div id='game'>
-    <ui-panel :item='item' :items='items' :currentTurn='currentTurn'></ui-panel>
+    <ui-panel :focusedItem='focusedItem' :items='items' :currentTurn='currentTurn'></ui-panel>
   </div>
 </template>
 
@@ -14,7 +14,7 @@ import { createGameInstance } from '@/game';
 export default {
   data () {
     return {
-        item: null,
+        focusedItem: null,
         items: {},
         turn: 1
     }
@@ -31,12 +31,13 @@ export default {
     this.game = createGameInstance({root: 'game'});
     this.game.init();
     this.items = this.game.playableObjects;
-    this.game.on('ITEM_FOCUSED', (item) => {
-        this.item = item;
+
+    this.game.on('ITEM_FOCUSED', (focusedItem) => {
+        this.focusedItem = focusedItem;
     });
 
     this.game.on('ITEM_UNFOCUSED', () => {
-        this.item = null;
+        this.focusedItem = null;
     });
 
     this.game.on('NEXT_TURN', () => {
@@ -49,8 +50,8 @@ export default {
 <style lang="stylus">
 #game
   font-family 'Cairo', sans-serif
-  height 100vh
-  width 100vw
+  height 100%
+  width 100%
   background #eee
   user-select none
 </style>

@@ -1,26 +1,26 @@
 <template>
   <div id='ui-panel'>
     <div class='bottom-row'>
-        <button class='btn' @click='nextTurn'>{{nextTurnText}}</button>
-        <button :class='["btn", showItems ? "bg-yellow" : "bg-green"]' @click='toggleItems'>{{toggleItemsText}}</button>
-        <transition
-            name="custom-classes-transition"
-            enter-active-class="animated flipInX"
-            leave-active-class="animated flipOutX"
-        >
-            <div v-if='showItems' class='items-container'>
-                <div class='active-item' v-for='(el, index) in itemsList' :key='el.id'>
-                    <active-item :el=el />
+        <button class='btn ui-item' @click='nextTurn'>{{nextTurnText}}</button>
+        <button :class='["btn", "ui-item", showItems ? "bg-yellow" : "bg-green"]' @click='toggleItems'>{{toggleItemsText}}</button>
+        <div class='active-items-container'>
+            <transition
+                name="custom-classes-transition"
+                enter-active-class="animated fadeInDown"
+                leave-active-class="animated fadeOutUp"
+            >
+                <div v-if='showItems' class='items-container'>
+                    <active-item v-for='(el, index) in itemsList' :key='el.id' :item=el />
                 </div>
-            </div>
-        </transition>
-        <transition
-            name="custom-classes-transition"
-            enter-active-class="animated flipInX"
-            leave-active-class="animated flipOutX"
-        >
-            <active-item v-if='item && !showItems' :el=item />
-        </transition>
+            </transition>
+            <transition
+                name="custom-classes-transition"
+                enter-active-class="animated flipInX"
+                leave-active-class="animated flipOutX"
+            >
+                <active-item v-if='focusedItem && !showItems' :item='focusedItem' />
+            </transition>
+        </div>
     </div>
     <div class='turn-container'>TURN: {{currentTurn}}</div>
   </div>
@@ -28,13 +28,13 @@
 
 <script>
 import Vue from 'vue';
-import ActiveItem from '@/components/ActiveItem.vue';
+import UIActiveItem from '@/components/UIActiveItem.vue';
 import { gameInstance as game } from '@/game';
 
 export default {
   name: 'UIPanel',
   props: {
-    item: {
+    focusedItem: {
         type: Object
     },
     items: {
@@ -45,7 +45,7 @@ export default {
     }
   },
   components: {
-    'active-item': ActiveItem
+    'active-item': UIActiveItem
   },
   data () {
     return {
@@ -58,9 +58,6 @@ export default {
     },
     nextTurn() {
         game.watchers('NEXT_TURN');
-    },
-    focusItem(item) {
-        item.scrollIntoView();
     }
   },
   computed: {
@@ -86,28 +83,20 @@ export default {
     left 0
     width 100%
     display flex
+    backface-visibility hidden
 
-.params-container
-    margin 8px
-    padding 8px
-    color rgba(0,0,0,0.5)
-    border-radius 5px
-    background #fff
-    box-shadow 0 1px 3px 0 rgba(0,0,0,0.3)
+.active-items-container
+    flex 1
     display flex
-    align-items center
-    justify-content center
+    owerflow-x scroll
 
-    & p
-        margin 0
+.items-container
+    display flex
+    flex 1
 
 .bottom-row
     display flex
-    height 64px
-
-.svg-icon
-    height 32px
-
+    height 48px
 
 .turn-container
     position absolute

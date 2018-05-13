@@ -1,15 +1,15 @@
 <template>
-    <div class='btn bg-white params-container' @click='focusItem(el)'>
-        <div class='svg-icon' v-html='el.getNormalizedSvgStr()'></div>
-        <p>x: {{el.x}} - y: {{el.y}}. lvl: {{el.level}}. MP: {{el.movePoints}}</p>
+    <div class='btn ui-item bg-white params-container' @click='focusItem'>
+        <div class='svg-icon' v-html='item.getNormalizedSvgStr()'></div>
+        <p>x: {{item.x}} - y: {{item.y}}. lvl: {{item.level}}. MP: {{item.movePoints}}</p>
     </div>
 </template>
 
 <script>
 export default {
-  name: 'ActiveItem',
+  name: 'UIActiveItem',
   props: {
-      el: {
+      item: {
           type: Object,
           required: true
       }
@@ -19,8 +19,8 @@ export default {
     }
   },
   methods: {
-    focusItem(item) {
-        item.scrollIntoView();
+    focusItem() {
+        this.item.scrollIntoView();
     }
   }
 }
@@ -30,7 +30,6 @@ export default {
 
 .params-container
     margin 8px
-    padding 8px
     color rgba(0,0,0,0.5)
     border-radius 5px
     background #fff
@@ -41,5 +40,8 @@ export default {
 
     & p
         margin 0
+
+.svg-icon
+    height 32px
 
 </style>

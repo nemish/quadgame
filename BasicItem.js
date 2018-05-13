@@ -8,14 +8,29 @@ export class BasicItem extends Circle {
     super(props);
     this.level = level;
     this.movePoints = 10;
+    this.radius = this.elem.width / 2;
+    this.elem.radius(this.radius);
     game.on('NEXT_TURN', () => {
       this.movePoints = 10;
     });
   }
 
+  _loopAnimation() {
+    const animateForward = () => this.elem.animate({ease: '<', duration: 500}).radius(this.radius + 4).after(animateBack)
+    const animateBack = () => this.elem.animate({ease: '>', duration: 500}).radius(this.radius).after(animateForward)
+    animateForward();
+  }
+
   toggleFocus() {
     super.toggleFocus();
     const eventName = this.focused ? 'ITEM_FOCUSED' : 'ITEM_UNFOCUSED';
+    if (this.focused) {
+      this._loopAnimation();
+    } else {
+      this.elem.stop();
+      this.toggleStroke(false);
+      this.elem.radius(this.radius);
+    }
     game.watchers(eventName, this);
     game.setMovePath(this);
   }

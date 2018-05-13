@@ -9,6 +9,19 @@ import {
 import { BasicItem } from '@/BasicItem';
 import { CELLS_COUNT, cellWidth } from '@/constants';
 
+const getRandomCoords = (cells) => {
+    const x = getRandomFromArray(Object.keys(cells));
+    const y = getRandomFromArray(Object.keys(cells[0]));
+    return {x, y};
+}
+
+const getRandomVacantCoords = (cells) => {
+    let coords = getRandomCoords(cells);
+    while (cells[coords.x][coords.y].placed) {
+       coords = getRandomCoords(cells);
+    }
+    return coords;
+}
 
 export class Game {
   constructor({ root }) {
@@ -45,6 +58,15 @@ export class Game {
     this.canvas.mousemove(this.onMouseMove.bind(this));
 
     this.placeRandom(BasicItem);
+    this.placeRandom(BasicItem);
+    this.placeRandom(BasicItem);
+    this.placeRandom(BasicItem);
+    this.placeRandom(BasicItem);
+    this.placeRandom(BasicItem);
+    const el = this.placeRandom(BasicItem);
+    setTimeout(() => {
+      el.scrollIntoView();
+    }, 500);
   }
 
   on(eventName, cb) {
@@ -90,6 +112,9 @@ export class Game {
 
   setMovePath(obj) {
     const {x, y, focused} = obj;
+    if (this.activeObj && focused) {
+      this.activeObj.toggleFocus(false);
+    }
     this.pathDestCoords = focused ? {x, y} : null;
     this.activeObj = obj;
     if (!this.pathDestCoords) {
@@ -100,12 +125,10 @@ export class Game {
   }
 
   placeRandom(factory) {
-    const x = getRandomFromArray(Object.keys(this.cells));
-    const y = getRandomFromArray(Object.keys(this.cells[0]));
+    const {x, y} = getRandomVacantCoords(this.cells);
     const el = this.createPlayeableItem({x, y, factory});
-    setTimeout(() => {
-      el.scrollIntoView();
-    }, 500);
+    this.cells[x][y].placed = el;
+    return el;
   }
 
   createPlayeableItem({x, y, factory}) {

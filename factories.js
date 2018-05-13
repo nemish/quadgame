@@ -7,6 +7,7 @@ export const circleCellPos = ({param}) => param * cellWidth + (cellWidth / 2)
 export const createCircle = ({x, y, exactWidth=null, ratio=2, fillOpacity}) => {
   const width = exactWidth === null ? (cellWidth - (cellWidth / ratio)) : exactWidth;
   const circle = gameInstance.canvas.circle(width)
+    .radius(width / 2)
     .cx(circleCellPos({param: x, width}))
     .cy(circleCellPos({param: y, width}))
     .fill(CIRCLE_COLOR)
