@@ -28,21 +28,11 @@ export class BasicItem extends Circle {
   toggleFocus() {
     super.toggleFocus();
     const eventName = this.focused ? 'ITEM_FOCUSED' : 'ITEM_UNFOCUSED';
-    // if (this.focused) {
-    //   // this._loopAnimation();
-    // } else {
-    //   this.elem.stop();
-    //   this.toggleStroke(false);
-    //   this.elem.radius(this.radius);
-    // }
     game.watchers(eventName, this);
     game.setMovePath(this);
   }
 
-  canMoveInto({x, y}) {
-    if (!game.canMoveThroughCoords({x, y})) {
-      return
-    }
+  hasPointsToMove({x, y}) {
     const distance = this.getDistance({x, y});
     return this.movePoints - distance >= 0;
   }

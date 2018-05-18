@@ -192,7 +192,7 @@ export class Game {
 
     const newPathCells = {};
     const lists = [[], []];
-    console.log('before iterators', x, y, initCell.x, initCell.y, x > initCell.x, y > initCell.y);
+    // console.log('before iterators', x, y, initCell.x, initCell.y, x > initCell.x, y > initCell.y);
     iterators.forEach((iterator, index) => {
       const {begin, limit} = iterator;
       // let stop = false;
@@ -201,17 +201,18 @@ export class Game {
           // if (stop) {
           //   return;
           // }
-          console.log('inside iterator', i);
+          // console.log('inside iterator', i);
           const cell = iterator.getterFn(i);
           const cx = cell.x;
           const cy = cell.y;
           const cz = cell.z;
-          console.log('iteration', i, cell)
+          // console.log('iteration', i, cell)
           if (cx === +x && cy === +y) {
             return;
           }
 
-          if (!this.activeObj.canMoveInto({x: cx, y: cy})) {
+          if (!this.canMoveInto({x: cx, y: cy})) {
+            // console.log('canMoveInto inside');
             // stop = true;
             return;
           }
@@ -227,25 +228,24 @@ export class Game {
             this.pathCells[key] = cell;
           }
           newPathCells[key] = {x: cx, y: cy};
+          // console.log(newPathCells, this.pathCells);
         },
         begin,
         limit
       });
     });
 
+    console.log('**** lists before ****', lists)
+    const sortedLists = [];
     lists.forEach((l, index) => {
       const key = index === 0 ? 'cx' : 'cy';
-      l.sort((prev, next) => Math.abs(prev[key] - next[key]) > 0);
+      sortedLists.push(l.sort((prev, next) => {
+        return +prev[key] - +next[key];
+      }));
     });
 
-    let el = null;
-    if (lists[0].length) {
-      if (lists[0].length < Math.abs(x - this.lastCell.x)) {
-        el = lists[0][lists[0].length - 1];
-      } else {
-        el = lists[1][lists[1].length - 1];
-      }
-    }
+    const index = y < this.lastCell.y ? sortedLists[1].length - 1 : 0;
+    const el = sortedLists[1][index];
 
     this.moveCell = null;
     if (el) {
@@ -256,6 +256,14 @@ export class Game {
       this.pathCells[key].togglePath(false);
     });
   }
+
+  canMoveInto({x, y}) {
+    if (!this.canMoveThroughCoords({x, y})) {
+      return
+    }
+    return this.activeObj.hasPointsToMove({x, y});
+  }
+
 
   turnOffPath() {
     Object.keys(this.pathCells).forEach(key => {
