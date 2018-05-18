@@ -16,11 +16,15 @@ export class ActiveObject {
   }
 
   getNormalizedSvgStr() {
-    const clone = this.elem.clone().cx(16).cy(16);
+    const clone = this.elem.clone().cx(8).cy(8);
     clone.width(16);
     const svg = clone.svg();
     clone.remove();
-    return `<svg height='32' width='32'>${clone.svg()}</svg>`;
+    return `<svg height='16' width='16'>${clone.svg()}</svg>`;
+  }
+
+  getDistance({x, y}) {
+    return Math.abs(this.y - y) + Math.abs(this.x - x);
   }
 
   scrollIntoView() {
@@ -29,6 +33,13 @@ export class ActiveObject {
       top: this.elem.y() - window.innerHeight / 2,
       behavior: "smooth"
     });
+  }
+
+  focusInView() {
+    this.scrollIntoView();
+    if (!this.focused) {
+      this.toggleFocus();
+    }
   }
 
   /** Abstract */
@@ -43,6 +54,11 @@ export class ActiveObject {
     const {x, y} = this;
     return {x, y};
   }
+
+  isFocused() {
+    return this.focused;
+  }
+
   toggleFocus() {
     if (this.focused) {
       this.toggleStroke(false);

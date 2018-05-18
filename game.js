@@ -27,6 +27,7 @@ export class Game {
   constructor({ root }) {
     this.cells = {};
     this.currentTurn = 1;
+    this.focusedItem = null;
     this.pathCells = {};
     this.canvas = SVG(root).size(CELLS_COUNT * cellWidth, CELLS_COUNT * cellWidth);
     this._hoverCell = null;
@@ -77,8 +78,18 @@ export class Game {
   }
 
   watchers(eventName, payload) {
-    if (eventName === 'NEXT_TURN') {
-      this.currentTurn++;
+    console.log('%c' + eventName, 'font-weight: bold');
+    console.log('payload', payload);
+    switch (eventName) {
+      case 'NEXT_TURN':
+        this.currentTurn++;
+        break;
+      case 'ITEM_FOCUSED':
+        if (this.focusedItem && this.focusedItem.id !== payload.id && this.focusedItem.isFocused()) {
+          this.focusedItem.toggleFocus();
+        }
+        this.focusedItem = payload;
+        break;
     }
 
     const callbacks = this.events[eventName] || [];
@@ -101,6 +112,10 @@ export class Game {
     }
   }
 
+  canMoveThroughCoords({x, y}) {
+    return !this.cells[x][y].placed;
+  }
+
   addCell(cell) {
     const {x, y} = cell.getCoords();
     if (this.cells[x]) {
@@ -112,9 +127,9 @@ export class Game {
 
   setMovePath(obj) {
     const {x, y, focused} = obj;
-    if (this.activeObj && focused) {
-      this.activeObj.toggleFocus(false);
-    }
+    // if (this.activeObj && focusedItem) {
+    //   this.activeObj.toggleFocus(false);
+    // }
     this.pathDestCoords = focused ? {x, y} : null;
     this.activeObj = obj;
     if (!this.pathDestCoords) {
@@ -158,44 +173,46 @@ export class Game {
     this.lastCell.toggleDestinationPoint(true)
 
     let iteratorX = whileForward();
-    if (initCell.x > x) {
+    if (x > initCell.x) {
       iteratorX = whileBack();
     }
-    iteratorX.getterFn = (i) => this.cells[i][y]
-    iteratorX.reverse = () => {
-      iteratorX.getterFn = (i) => this.cells[i][initCell.y]
-    }
-    iteratorX.begin = initCell.x;
-    iteratorX.limit = x;
+    iteratorX.getterFn = (i) => this.cells[i][+y]
+    iteratorX.begin = x;
+    iteratorX.limit = initCell.x;
     iterators.push(iteratorX);
 
     let iteratorY = whileForward();
-    if (initCell.y > y) {
+    if (y > initCell.y) {
       iteratorY = whileBack();
     }
-    iteratorY.getterFn = (i) => this.cells[initCell.x][i]
-    iteratorY.reverse = () => {
-      iteratorY.getterFn = (i) => this.cells[x][i]
-    }
-    iteratorY.begin = initCell.y;
-    iteratorY.limit = y;
+    iteratorY.getterFn = (i) => this.cells[+initCell.x][i]
+    iteratorY.begin = y;
+    iteratorY.limit = initCell.y;
     iterators.push(iteratorY);
 
     const newPathCells = {};
     const lists = [[], []];
+    console.log('before iterators', x, y, initCell.x, initCell.y, x > initCell.x, y > initCell.y);
     iterators.forEach((iterator, index) => {
       const {begin, limit} = iterator;
+      // let stop = false;
       iterator({
         fn: (i) => {
+          // if (stop) {
+          //   return;
+          // }
+          console.log('inside iterator', i);
           const cell = iterator.getterFn(i);
           const cx = cell.x;
           const cy = cell.y;
           const cz = cell.z;
+          console.log('iteration', i, cell)
           if (cx === +x && cy === +y) {
             return;
           }
 
           if (!this.activeObj.canMoveInto({x: cx, y: cy})) {
+            // stop = true;
             return;
           }
           lists[index].push({cx, cy});
@@ -246,10 +263,16 @@ export class Game {
     });
   }
 
+  getObjectsCell(obj) {
+    const {x, y} = obj;
+    return this.cells[x][y];
+  }
+
   moveActiveObject() {
     if (!this.activeObj || !this.moveCell) {
       return
     }
+    this.getObjectsCell(this.activeObj).placed = null;
     const {x, y} = this.moveCell;
     this.activeObj.moveTo({x, y});
     this.turnOffPath();

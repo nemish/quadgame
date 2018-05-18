@@ -1,6 +1,6 @@
 <template>
     <div class='btn ui-item bg-white params-container' @click='focusItem'>
-        <div class='svg-icon' v-html='item.getNormalizedSvgStr()'></div>
+        <div class='svg-icon' v-html='itemAvatar'></div>
         <p>x: {{item.x}} - y: {{item.y}}. lvl: {{item.level}}. MP: {{item.movePoints}}</p>
     </div>
 </template>
@@ -18,9 +18,14 @@ export default {
     return {
     }
   },
+  computed: {
+    itemAvatar() {
+        return this.item.getNormalizedSvgStr();
+    }
+  },
   methods: {
     focusItem() {
-        this.item.scrollIntoView();
+        this.item.focusInView();
     }
   }
 }
@@ -43,5 +48,10 @@ export default {
 
 .svg-icon
     height 32px
+    display flex
+    margin-right 5px
+
+    & *
+        margin auto
 
 </style>

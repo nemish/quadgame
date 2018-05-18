@@ -22,7 +22,11 @@
             </transition>
         </div>
     </div>
-    <div class='turn-container'>TURN: {{currentTurn}}</div>
+    <div class='turn-container'>
+        <p>TURN: {{currentTurn}}</p>
+        <p>ITEMS WITH MP: {{itemsWithMP}}</p>
+        <p>TOTAL FREE MP: {{totalMP}}</p>
+    </div>
   </div>
 </template>
 
@@ -61,6 +65,14 @@ export default {
     }
   },
   computed: {
+    itemsWithMP() {
+        return this.itemsList.filter(item => item.getRemainingMovePoints() > 0).length;
+    },
+    totalMP() {
+        return this.itemsList.reduce((agg, item) => {
+            return agg + item.getRemainingMovePoints();
+        }, 0);
+    },
     itemsList() {
         return Object.keys(this.items).map(key => this.items[key]);
     },
@@ -84,11 +96,11 @@ export default {
     width 100%
     display flex
     backface-visibility hidden
+    pointer-events none
 
 .active-items-container
     flex 1
     display flex
-    owerflow-x scroll
 
 .items-container
     display flex
@@ -100,7 +112,10 @@ export default {
 
 .turn-container
     position absolute
-    top -8px
+    top -32px
     left 8px
+
+    & p
+        margin 0
 
 </style>

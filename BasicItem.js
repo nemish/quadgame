@@ -21,31 +21,33 @@ export class BasicItem extends Circle {
     animateForward();
   }
 
+  getRemainingMovePoints() {
+    return this.movePoints;
+  }
+
   toggleFocus() {
     super.toggleFocus();
     const eventName = this.focused ? 'ITEM_FOCUSED' : 'ITEM_UNFOCUSED';
-    if (this.focused) {
-      this._loopAnimation();
-    } else {
-      this.elem.stop();
-      this.toggleStroke(false);
-      this.elem.radius(this.radius);
-    }
+    // if (this.focused) {
+    //   // this._loopAnimation();
+    // } else {
+    //   this.elem.stop();
+    //   this.toggleStroke(false);
+    //   this.elem.radius(this.radius);
+    // }
     game.watchers(eventName, this);
     game.setMovePath(this);
   }
 
   canMoveInto({x, y}) {
+    if (!game.canMoveThroughCoords({x, y})) {
+      return
+    }
     const distance = this.getDistance({x, y});
-    return this.movePoints - distance > 0;
-  }
-
-  getDistance({x, y}) {
-    return Math.abs(this.y - y) + Math.abs(this.x - x);
+    return this.movePoints - distance >= 0;
   }
 
   moveTo({x, y, reversed}) {
-    console.log('object', this.id, 'moved from', this.x, this.y, 'to', x, y);
     const stages = [
       { x, y: this.y },
       { x, y }
@@ -53,9 +55,7 @@ export class BasicItem extends Circle {
 
     const distance = this.getDistance({x, y});
     this.movePoints -= distance;
-    if (this.movePoints <= 0) {
-      game.watchers('MOVE_POINTS_EMPTY', item);
-    }
+    this.movePoints = Math.max(this.movePoints, 0);
 
     stages.forEach(st => {
       const cx = circleCellPos({param: st.x});
