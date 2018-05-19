@@ -66,10 +66,10 @@ export default {
   },
   computed: {
     itemsWithMP() {
-        return this.itemsList.filter(item => item.getRemainingMovePoints() > 0).length;
+        return this.itemsList.filter(item => item.getRemainingMovePoints && item.getRemainingMovePoints() > 0).length;
     },
     totalMP() {
-        return this.itemsList.reduce((agg, item) => {
+        return this.itemsList.filter(item => item.getRemainingMovePoints).reduce((agg, item) => {
             return agg + item.getRemainingMovePoints();
         }, 0);
     },

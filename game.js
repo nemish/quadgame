@@ -7,6 +7,7 @@ import {
   sequenceNumbers
 } from '@/utils';
 import { BasicItem } from '@/BasicItem';
+import { Quad } from '@/Quad';
 import { CELLS_COUNT, cellWidth } from '@/constants';
 
 const getRandomCoords = (cells) => {
@@ -60,11 +61,7 @@ export class Game {
 
     this.placeRandom(BasicItem);
     this.placeRandom(BasicItem);
-    this.placeRandom(BasicItem);
-    this.placeRandom(BasicItem);
-    this.placeRandom(BasicItem);
-    this.placeRandom(BasicItem);
-    const el = this.placeRandom(BasicItem);
+    const el = this.placeRandom(Quad);
     console.log('INITIALIZE', this.cells)
     setTimeout(() => {
       el.scrollIntoView();

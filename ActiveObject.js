@@ -69,7 +69,7 @@ export class ActiveObject {
   }
 
   toggleStroke(show) {
-    return this.elem.animate({ease: '>', duration: 200}).stroke({width: show ? 2 : 0, color: '#333'});
+    return this.elem.animate({ease: '>', duration: 200}).stroke({width: show ? 5 : 0, color: '#333'});
   }
 
   onClick() {
