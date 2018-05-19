@@ -5,9 +5,10 @@ import { gameInstance as game } from '@/game';
 
 export class Cell extends ActiveObject {
   constructor({x, y}) {
-    super({x, y, factoryMethod: createCell});
+    super({x, y, game, factoryMethod: createCell});
     this.number = createNumber({x, y});
     this.pathMarker = createCircle({x, y, ratio: 1.1, fillOpacity: 0});
+    this.game = game;
     this.destinationPoint = createCircle({x, y, exactWidth: 0, fillOpacity: 0.2});
     this.destinationPoint.mouseover(this.onMouseOver.bind(this));
     this.destinationPointShow = false;
@@ -15,6 +16,10 @@ export class Cell extends ActiveObject {
 
   _toggleNumber(show) {
     this.number.animate({ease: '<', duration: 100}).attr({'fill-opacity': show ? 0.2 : 0});
+  }
+
+  freeFromItem() {
+    this.placed = null;
   }
 
   toggleHover(hover) {

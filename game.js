@@ -65,9 +65,40 @@ export class Game {
     this.placeRandom(BasicItem);
     this.placeRandom(BasicItem);
     const el = this.placeRandom(BasicItem);
+    console.log('INITIALIZE', this.cells)
     setTimeout(() => {
       el.scrollIntoView();
     }, 500);
+  }
+
+  /**
+   * setInterval(this.tick.bind(this), 500);
+   * Cleanup method
+   */
+  tick() {
+    const placedCoors = {};
+    Object.keys(this.playableObjects).forEach(key => {
+      const obj = this.playableObjects[key];
+      const { x, y } = obj;
+      if (!placedCoors[x]) {
+        placedCoors[x] = {};
+      }
+      placedCoors[x][y] = true;
+    });
+
+    this._cellsForEach(cell => {
+        if (cell.placed && !(placedCoors[cell.x] && placedCoors[cell.x][cell.y])) {
+            cell.freeFromItem();
+        }
+    });
+  }
+
+  _cellsForEach(fn) {
+    Object.keys(this.cells).forEach(key => {
+      Object.keys(this.cells[key]).forEach(innerKey => {
+        return this.cells[key][innerKey];
+      });
+    });
   }
 
   on(eventName, cb) {
@@ -113,6 +144,7 @@ export class Game {
   }
 
   canMoveThroughCoords({x, y}) {
+    console.log(this.cells[x][y],{x, y});
     return !this.cells[x][y].placed;
   }
 
@@ -127,9 +159,6 @@ export class Game {
 
   setMovePath(obj) {
     const {x, y, focused} = obj;
-    // if (this.activeObj && focusedItem) {
-    //   this.activeObj.toggleFocus(false);
-    // }
     this.pathDestCoords = focused ? {x, y} : null;
     this.activeObj = obj;
     if (!this.pathDestCoords) {
@@ -142,12 +171,14 @@ export class Game {
   placeRandom(factory) {
     const {x, y} = getRandomVacantCoords(this.cells);
     const el = this.createPlayeableItem({x, y, factory});
+
+    console.log('placeRandom', x,y);
     this.cells[x][y].placed = el;
     return el;
   }
 
   createPlayeableItem({x, y, factory}) {
-    const el = new factory({x, y});
+    const el = new factory({x, y, game: this});
     this.playableObjects[el.id] = el;
     return el
   }
@@ -192,16 +223,15 @@ export class Game {
 
     const newPathCells = {};
     const lists = [[], []];
-    // console.log('before iterators', x, y, initCell.x, initCell.y, x > initCell.x, y > initCell.y);
+    console.log('%c ++++++  BEFORE ITERATORS ++++++', 'color: #ff06d5; font-weight: bold;', x, y, initCell.x, initCell.y, x > initCell.x, y > initCell.y);
+    let stop = false;
     iterators.forEach((iterator, index) => {
       const {begin, limit} = iterator;
-      // let stop = false;
       iterator({
         fn: (i) => {
-          // if (stop) {
-          //   return;
-          // }
-          // console.log('inside iterator', i);
+          if (stop) {
+            return;
+          }
           const cell = iterator.getterFn(i);
           const cx = cell.x;
           const cy = cell.y;
@@ -210,10 +240,11 @@ export class Game {
           if (cx === +x && cy === +y) {
             return;
           }
+          console.log('inside iterator', i, stop, cx, cy);
 
           if (!this.canMoveInto({x: cx, y: cy})) {
-            // console.log('canMoveInto inside');
-            // stop = true;
+            console.log('canMoveInto inside');
+            stop = true;
             return;
           }
           lists[index].push({cx, cy});
@@ -234,8 +265,8 @@ export class Game {
         limit
       });
     });
+    console.log('%c ++++++  AFTER ITERATORS ++++++', 'color: #cc06d5; font-weight: bold;', x, y, initCell.x, initCell.y, x > initCell.x, y > initCell.y);
 
-    console.log('**** lists before ****', lists)
     const sortedLists = [];
     lists.forEach((l, index) => {
       const key = index === 0 ? 'cx' : 'cy';
@@ -258,10 +289,7 @@ export class Game {
   }
 
   canMoveInto({x, y}) {
-    if (!this.canMoveThroughCoords({x, y})) {
-      return
-    }
-    return this.activeObj.hasPointsToMove({x, y});
+    return this.canMoveThroughCoords({x, y}) && this.activeObj.hasPointsToMove({x, y});
   }
 
 
@@ -273,6 +301,7 @@ export class Game {
 
   getObjectsCell(obj) {
     const {x, y} = obj;
+    console.log('getObjectsCell', x, y, this.cells[x][y])
     return this.cells[x][y];
   }
 
@@ -280,10 +309,11 @@ export class Game {
     if (!this.activeObj || !this.moveCell) {
       return
     }
-    this.getObjectsCell(this.activeObj).placed = null;
+    this.getObjectsCell(this.activeObj).freeFromItem();
     const {x, y} = this.moveCell;
     this.activeObj.moveTo({x, y});
     this.turnOffPath();
+    this.cells[x][y].placed = this.activeObj;
     this.moveCell = null;
   }
 }
