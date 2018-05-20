@@ -10,26 +10,13 @@ export class BasicItem extends Circle {
     this.movePoints = 10;
     this.radius = this.elem.width / 2;
     this.elem.radius(this.radius);
-    game.on('NEXT_TURN', () => {
+    this.game.on('NEXT_TURN', () => {
       this.movePoints = 10;
     });
   }
 
-  _loopAnimation() {
-    const animateForward = () => this.elem.animate({ease: '<', duration: 500}).radius(this.radius + 4).after(animateBack)
-    const animateBack = () => this.elem.animate({ease: '>', duration: 500}).radius(this.radius).after(animateForward)
-    animateForward();
-  }
-
   getRemainingMovePoints() {
     return this.movePoints;
-  }
-
-  toggleFocus() {
-    super.toggleFocus();
-    const eventName = this.focused ? 'ITEM_FOCUSED' : 'ITEM_UNFOCUSED';
-    game.watchers(eventName, this);
-    game.setMovePath(this);
   }
 
   hasPointsToMove({x, y}) {
@@ -57,6 +44,6 @@ export class BasicItem extends Circle {
     });
     this.x = x;
     this.y = y;
-    game.setMovePath(this);
+    this.game.setMovePath(this);
   }
 };

@@ -1,7 +1,8 @@
 <template>
-    <div class='btn ui-item bg-white params-container' @click='focusItem'>
+    <div :class='["btn ui-item bg-white params-container", item.isFocused() && "focused"]' @click='focusItem'>
         <div class='svg-icon' v-html='itemAvatar'></div>
-        <p>x: {{item.x}} - y: {{item.y}}. lvl: {{item.level}}. MP: {{item.movePoints}}</p>
+        <p v-if='isStatic'>x: {{item.x}} - y: {{item.y}}.</p>
+        <p v-if='!isStatic'>x: {{item.x}} - y: {{item.y}}. lvl: {{item.level}}. MP: {{item.movePoints}}</p>
     </div>
 </template>
 
@@ -21,6 +22,9 @@ export default {
   computed: {
     itemAvatar() {
         return this.item.getNormalizedSvgStr();
+    },
+    isStatic() {
+        return this.item.isStatic()
     }
   },
   methods: {

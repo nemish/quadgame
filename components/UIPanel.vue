@@ -1,7 +1,7 @@
 <template>
   <div id='ui-panel'>
     <div class='bottom-row'>
-        <button class='btn ui-item' @click='nextTurn'>{{nextTurnText}}</button>
+        <button :class='["btn ui-item", totalMP <= 0 && "animated pulse infinite focused"]' @click='nextTurn'>{{nextTurnText}}</button>
         <button :class='["btn", "ui-item", showItems ? "bg-yellow" : "bg-green"]' @click='toggleItems'>{{toggleItemsText}}</button>
         <div class='active-items-container'>
             <transition

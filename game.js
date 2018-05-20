@@ -7,7 +7,7 @@ import {
   sequenceNumbers
 } from '@/utils';
 import { BasicItem } from '@/BasicItem';
-import { Quad } from '@/Quad';
+import { StaticItem } from '@/StaticItem';
 import { CELLS_COUNT, cellWidth } from '@/constants';
 
 const getRandomCoords = (cells) => {
@@ -35,6 +35,7 @@ export class Game {
     this.events = {};
     this.playableObjects = {};
     this.moveCell = null;
+    this.activeObj = null;
   }
 
   get hoverCell() {
@@ -61,7 +62,7 @@ export class Game {
 
     this.placeRandom(BasicItem);
     this.placeRandom(BasicItem);
-    const el = this.placeRandom(Quad);
+    const el = this.placeRandom(StaticItem);
     console.log('INITIALIZE', this.cells)
     setTimeout(() => {
       el.scrollIntoView();
@@ -118,6 +119,13 @@ export class Game {
         }
         this.focusedItem = payload;
         break;
+      case 'MOVE':
+        this.moveActiveObject();
+        break;
+      case 'BUILD_STATIC_ITEM':
+        const {x, y} = payload;
+        this.placeInCoords({x, y}, this.focusedItem);
+        break;
     }
 
     const callbacks = this.events[eventName] || [];
@@ -165,6 +173,13 @@ export class Game {
     }
   }
 
+  placeInCoords({x, y}, {factory}) {
+    const el = this.createPlayeableItem({x, y, factory});
+    console.log('placeInCoords', x,y);
+    this.cells[x][y].placed = el;
+    return el;
+  }
+
   placeRandom(factory) {
     const {x, y} = getRandomVacantCoords(this.cells);
     const el = this.createPlayeableItem({x, y, factory});
@@ -177,19 +192,43 @@ export class Game {
   createPlayeableItem({x, y, factory}) {
     const el = new factory({x, y, game: this});
     this.playableObjects[el.id] = el;
-    return el
+    return el;
+  }
+
+  _handleStaticItem(cell) {
+    const {x, y} = cell;
+
+    this._handleLastCell(cell);
+    if (!this.activeObj || !this.activeObj.canHandleCell({x, y})) {
+      console.log('NO! canHandleCell', this.activeObj)
+      return;
+    }
+    const actionName = this.activeObj.getActionName(cell);
+    console.log('canHandleCell', this.activeObj.getActionName(cell));
+    cell.toggleActionPoint(actionName);
+  }
+
+  _handleLastCell(cell) {
+    if (this.lastCell) {
+      this.lastCell.toggleActionPoint();
+    }
+
+    this.lastCell = cell;
+
   }
 
   redrawPathToCell(initCell) {
-    if (!this.pathDestCoords || !this.activeObj) {
+    console.log('redrawPathToCell', this.activeObj && this.activeObj.isStatic());
+    if (this.activeObj && this.activeObj.isStatic()) {
+        return this._handleStaticItem(initCell);
+    }
+
+    if (!this.pathDestCoords || !this.activeObj || this.activeObj.isStatic()) {
       return;
     }
 
-    if (this.lastCell) {
-      this.lastCell.toggleDestinationPoint(false);
-    }
-
-    this.lastCell = initCell;
+    this._handleLastCell(initCell);
+    this.lastCell.toggleActionPoint(this.activeObj.getActionName(this.lastCell));
 
     let iterators = [];
     const { x, y } = this.pathDestCoords;
@@ -198,7 +237,6 @@ export class Game {
       return
     }
 
-    this.lastCell.toggleDestinationPoint(true)
 
     let iteratorX = whileForward();
     if (x > initCell.x) {
@@ -246,10 +284,6 @@ export class Game {
           }
           lists[index].push({cx, cy});
 
-          if (!this.moveCell) {
-            this.moveCell = {x: cx, y: cy};
-          }
-
           cell.togglePath(true);
           const key = `${cx}${cy}`;
           if (!this.pathCells[key]) {
@@ -273,7 +307,7 @@ export class Game {
     });
 
     const index = y < this.lastCell.y ? sortedLists[1].length - 1 : 0;
-    const el = sortedLists[1][index];
+    const el = sortedLists[1][index] || sortedLists[0][0];
 
     this.moveCell = null;
     if (el) {
@@ -303,6 +337,7 @@ export class Game {
   }
 
   moveActiveObject() {
+    console.log('moveActiveObject', this.activeObj, this.moveCell);
     if (!this.activeObj || !this.moveCell) {
       return
     }

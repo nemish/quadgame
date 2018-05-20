@@ -1,6 +1,6 @@
 import { ActiveObject } from '@/ActiveObject';
 import { CELL_COLOR, NUMBER_COLOR, CIRCLE_COLOR } from './constants';
-import { createCircle, createCell, createNumber } from './factories';
+import { createCircle, createCell, createNumber, createPlusSign } from './factories';
 import { gameInstance as game } from '@/game';
 
 export class Cell extends ActiveObject {
@@ -10,8 +10,9 @@ export class Cell extends ActiveObject {
     this.pathMarker = createCircle({x, y, ratio: 1.1, fillOpacity: 0});
     this.game = game;
     this.destinationPoint = createCircle({x, y, exactWidth: 0, fillOpacity: 0.2});
-    this.destinationPoint.mouseover(this.onMouseOver.bind(this));
-    this.destinationPointShow = false;
+    this.actionPoint = this.destinationPoint;
+    this.plusSign = createPlusSign({x, y, width: 0, height: 10});
+    this.actionPointShow = false;
   }
 
   _toggleNumber(show) {
@@ -34,19 +35,25 @@ export class Cell extends ActiveObject {
   }
 
   togglePath(show) {
-    if (show && !this.destinationPointShow) {
+    if (show && !this.actionPointShow) {
       this.pathMarker.attr({'fill-opacity': 0.5});
     } else {
       this.pathMarker.attr({'fill-opacity': 0});
     }
   }
 
-  setNextAction() {
-    this.destinationPoint.clicked = !this.destinationPoint.clicked;
-    if (this.destinationPoint.clicked) {
-      this.destinationPoint.fill(NUMBER_COLOR);
+  setNextAction({action, actionName}) {
+    this.actionPoint.clicked = !this.actionPoint.clicked;
+    if (this.actionPoint.clicked) {
+      this.actionPoint.fill(NUMBER_COLOR);
     } else {
-      game.moveActiveObject();
+      if (action) {
+        return action();
+      }
+      if (actionName) {
+        const {x, y} = this.actionPoint;
+        game.watchers(actionName, {x, y});
+      }
     }
   }
 
@@ -54,25 +61,38 @@ export class Cell extends ActiveObject {
     this.actionsShowed = true;
   }
 
-  toggleDestinationPoint(show) {
-    this.destinationPointShow = show;
-    if (this.destinationPointShow) {
-      this.destinationPoint.radius(12);
-      this.destinationPoint.click(this.setNextAction.bind(this))
+  toggleActionPoint(actionName) {
+    this.actionPointShow = !!actionName;
+    if (this.actionPointShow) {
+      if (actionName === 'plus') {
+        this.actionPoint = this.plusSign;
+        this.actionPoint.width(20);
+      } else {
+        this.actionPoint = this.destinationPoint;
+        this.actionPoint.radius(12);
+      }
+      this.actionPoint.actionName = actionName;
+      this.actionPoint.click(() => this.setNextAction({actionName}))
     } else {
       this.offDestinationPoint();
     }
   }
 
   offDestinationPoint() {
-    this.destinationPoint.radius(0).fill(CIRCLE_COLOR).clicked = false;
-    this.destinationPoint.off('click');
+    if (this.actionPoint.actionName === 'plus') {
+      this.actionPoint.height(0);
+    } else {
+      this.actionPoint.radius(0);
+    }
+    this.actionPoint.fill(CIRCLE_COLOR).clicked = false;
+    this.actionPoint.off('click');
   }
 
   onClick() {
     super.onClick();
-    if (this.destinationPointShow) {
-      this.setNextAction();
+    if (this.actionPointShow) {
+      const { actionName } = this.actionPoint;
+      this.setNextAction({actionName});
     }
   }
 }
