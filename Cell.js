@@ -11,7 +11,8 @@ export class Cell extends ActiveObject {
     this.game = game;
     this.destinationPoint = createCircle({x, y, exactWidth: 0, fillOpacity: 0.2});
     this.actionPoint = this.destinationPoint;
-    this.plusSign = createPlusSign({x, y, width: 0, height: 10});
+    this.plusSign = createPlusSign({x, y, size: 20});
+    this.plusSign.hide();
     this.actionPointShow = false;
   }
 
@@ -51,7 +52,7 @@ export class Cell extends ActiveObject {
         return action();
       }
       if (actionName) {
-        const {x, y} = this.actionPoint;
+        const {x, y} = this;
         game.watchers(actionName, {x, y});
       }
     }
@@ -64,9 +65,9 @@ export class Cell extends ActiveObject {
   toggleActionPoint(actionName) {
     this.actionPointShow = !!actionName;
     if (this.actionPointShow) {
-      if (actionName === 'plus') {
+      if (actionName === 'BUILD_STATIC_ITEM') {
         this.actionPoint = this.plusSign;
-        this.actionPoint.width(20);
+        this.actionPoint.show();
       } else {
         this.actionPoint = this.destinationPoint;
         this.actionPoint.radius(12);
@@ -79,8 +80,8 @@ export class Cell extends ActiveObject {
   }
 
   offDestinationPoint() {
-    if (this.actionPoint.actionName === 'plus') {
-      this.actionPoint.height(0);
+    if (this.actionPoint.actionName === 'BUILD_STATIC_ITEM') {
+      this.actionPoint.hide();
     } else {
       this.actionPoint.radius(0);
     }

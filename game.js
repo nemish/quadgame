@@ -124,7 +124,8 @@ export class Game {
         break;
       case 'BUILD_STATIC_ITEM':
         const {x, y} = payload;
-        this.placeInCoords({x, y}, this.focusedItem);
+        const factory = this.focusedItem.getFactory();
+        this.placeInCoords({x, y}, {factory});
         break;
     }
 

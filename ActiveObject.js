@@ -6,7 +6,7 @@ let nextId = 1;
 export class ActiveObject {
   constructor({x, y, game, factoryMethod}) {
     this.id = ++nextId;
-    this.factory = factoryMethod;
+    this.factoryMethod = factoryMethod;
     this.elem = factoryMethod({x, y});
     this.x = x;
     this.y = y;
@@ -77,6 +77,10 @@ export class ActiveObject {
 
   isFocused() {
     return this.focused;
+  }
+
+  getFactory() {
+    return this.constructor;
   }
 
   toggleFocus() {

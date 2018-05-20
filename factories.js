@@ -16,18 +16,20 @@ export const createCircle = ({x, y, exactWidth=null, ratio=2, fillOpacity}) => {
   return circle;
 }
 
-export const createQuad = ({x, y, width=rectWidth, height=rectWidth}) => {
-  return gameInstance.canvas.rect(width, height)
+export const createQuad = ({root=gameInstance.canvas, x, y, width=rectWidth, height=rectWidth, radius=8}) => {
+  return root.rect(width, height)
     .cx(circleCellPos({param: x, width}))
     .cy(circleCellPos({param: y, height}))
-    .radius(8)
+    .radius(radius)
     .fill('#EC6533')
     .attr({ 'fill-opacity': 0.8 });
 }
 
-export const createPlusSign = (props) => {
-  const el = createQuad(props);
-  return el;
+export const createPlusSign = ({x, y, size}) => {
+  const group = gameInstance.canvas.group();
+  group.add(createQuad({radius: 0, x, y, width: size, height: size - (size / 1.5)}))
+  group.add(createQuad({radius: 0, x, y, width: size - (size / 1.5), height: size}))
+  return group;
 }
 
 export const createCell = ({x, y}) => {
