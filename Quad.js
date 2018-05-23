@@ -3,8 +3,8 @@ import { createQuad } from './factories';
 import { gameInstance as game } from '@/game';
 
 export class Quad extends ActiveObject {
-  constructor({x, y, game}) {
-    super({x, y, game, factoryMethod: createQuad});
+  constructor(props) {
+    super({factoryMethod: createQuad, ...props});
   }
   _prepareClone(clone) {
     const cl = super._prepareClone(clone);

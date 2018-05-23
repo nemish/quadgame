@@ -10,7 +10,7 @@
                 leave-active-class="animated fadeOutUp"
             >
                 <div v-if='showItems' class='items-container'>
-                    <active-item v-for='(el, index) in itemsList' :key='el.id' :item=el />
+                    <active-item v-for='(el, index) in currentTeamItems' :key='el.id' :item=el />
                 </div>
             </transition>
             <transition
@@ -24,6 +24,7 @@
     </div>
     <div class='turn-container'>
         <p>TURN: {{currentTurn}}</p>
+        <p>TEAM: {{team.id}}</p>
         <p>ITEMS WITH MP: {{itemsWithMP}}</p>
         <p>TOTAL FREE MP: {{totalMP}}</p>
     </div>
@@ -46,6 +47,9 @@ export default {
     },
     currentTurn: {
         type: Number
+    },
+    team: {
+        type: Object
     }
   },
   components: {
@@ -62,14 +66,18 @@ export default {
     },
     nextTurn() {
         game.watchers('NEXT_TURN');
+        game.watchers('ITEM_UNFOCUSED');
     }
   },
   computed: {
+    currentTeamItems() {
+        return this.itemsList.filter(item => item.getTeam() === this.team.id);
+    },
     itemsWithMP() {
-        return this.itemsList.filter(item => item.getRemainingMovePoints && item.getRemainingMovePoints() > 0).length;
+        return this.currentTeamItems.filter(item => item.getRemainingMovePoints && item.getRemainingMovePoints() > 0).length;
     },
     totalMP() {
-        return this.itemsList.filter(item => item.getRemainingMovePoints).reduce((agg, item) => {
+        return this.currentTeamItems.filter(item => item.getRemainingMovePoints).reduce((agg, item) => {
             return agg + item.getRemainingMovePoints();
         }, 0);
     },
@@ -112,7 +120,7 @@ export default {
 
 .turn-container
     position absolute
-    top -32px
+    bottom 42px
     left 8px
 
     & p

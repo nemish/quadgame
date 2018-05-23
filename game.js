@@ -8,7 +8,7 @@ import {
 } from '@/utils';
 import { BasicItem } from '@/BasicItem';
 import { StaticItem } from '@/StaticItem';
-import { CELLS_COUNT, cellWidth } from '@/constants';
+import { CELLS_COUNT, CELL_WIDTH, TEAM_COLOR_1, TEAM_COLOR_2 } from '@/constants';
 
 const getRandomCoords = (cells) => {
     const x = getRandomFromArray(Object.keys(cells));
@@ -30,12 +30,36 @@ export class Game {
     this.currentTurn = 1;
     this.focusedItem = null;
     this.pathCells = {};
-    this.canvas = SVG(root).size(CELLS_COUNT * cellWidth, CELLS_COUNT * cellWidth);
+    this.canvas = SVG(root).size(CELLS_COUNT * CELL_WIDTH, CELLS_COUNT * CELL_WIDTH);
+    this.teams = [1, 2];
+    this.currentTeamIndex = 0;
     this._hoverCell = null;
     this.events = {};
     this.playableObjects = {};
     this.moveCell = null;
     this.activeObj = null;
+  }
+
+  get currentTeam() {
+    return this.teams[this.currentTeamIndex];
+  }
+
+  getCurrentTurn() {
+    return this.currentTurn;
+  }
+
+  getCurrentTeam() {
+    return {
+      id: this.currentTeam
+    }
+  }
+
+  get nextTeam() {
+    let index = this.currentTeamIndex + 1;
+    if (this.teams.length <= index) {
+      index = 0;
+    }
+    return this.teams[index];
   }
 
   get hoverCell() {
@@ -63,6 +87,10 @@ export class Game {
     this.placeRandom(BasicItem);
     this.placeRandom(BasicItem);
     const el = this.placeRandom(StaticItem);
+
+    this.placeRandom(BasicItem, this.nextTeam);
+    this.placeRandom(BasicItem, this.nextTeam);
+    this.placeRandom(StaticItem, this.nextTeam);
     console.log('INITIALIZE', this.cells)
     setTimeout(() => {
       el.scrollIntoView();
@@ -106,18 +134,32 @@ export class Game {
     this.events[eventName].push(cb);
   }
 
+  nextTurn() {
+    if (this.teams.length <= this.currentTeamIndex + 1) {
+      this.currentTeamIndex = 0;
+      this.currentTurn++;
+    } else {
+      ++this.currentTeamIndex;
+    }
+  }
+
   watchers(eventName, payload) {
     console.log('%c' + eventName, 'font-weight: bold');
     console.log('payload', payload);
     switch (eventName) {
       case 'NEXT_TURN':
-        this.currentTurn++;
+        this.nextTurn();
         break;
       case 'ITEM_FOCUSED':
         if (this.focusedItem && this.focusedItem.id !== payload.id && this.focusedItem.isFocused()) {
           this.focusedItem.toggleFocus();
         }
         this.focusedItem = payload;
+        break;
+      case 'ITEM_UNFOCUSED':
+        if (!payload && this.focusedItem) {
+          this.focusedItem.toggleFocus();
+        }
         break;
       case 'MOVE':
         this.moveActiveObject();
@@ -139,10 +181,14 @@ export class Game {
     });
   }
 
+  getTeamColor(team) {
+    return (team || this.currentTeam) === 1 ? TEAM_COLOR_1 : TEAM_COLOR_2;
+  }
+
   onMouseMove(e) {
     const {pageX, pageY} = e;
-    const x = Math.floor(pageX / cellWidth);
-    const y = Math.floor(pageY / cellWidth);
+    const x = Math.floor(pageX / CELL_WIDTH);
+    const y = Math.floor(pageY / CELL_WIDTH);
 
     if (!this.hoverCell || (this.hoverCell && (this.hoverCell.x !== x || this.hoverCell.y !== y))) {
       this.hoverCell = this.cells[x][y];
@@ -175,23 +221,23 @@ export class Game {
   }
 
   placeInCoords({x, y}, {factory}) {
-    const el = this.createPlayeableItem({x, y, factory});
+    const el = this.createPlayeableItem({x, y, factory, team: this.currentTeam});
     console.log('placeInCoords', x,y);
     this.cells[x][y].placed = el;
     return el;
   }
 
-  placeRandom(factory) {
+  placeRandom(factory, team=1) {
     const {x, y} = getRandomVacantCoords(this.cells);
-    const el = this.createPlayeableItem({x, y, factory});
+    const el = this.createPlayeableItem({x, y, factory, team});
 
-    console.log('placeRandom', x,y);
+    console.log('placeRandom', x,y,team);
     this.cells[x][y].placed = el;
     return el;
   }
 
-  createPlayeableItem({x, y, factory}) {
-    const el = new factory({x, y, game: this});
+  createPlayeableItem({x, y, factory, team}) {
+    const el = new factory({x, y, team, game: this});
     this.playableObjects[el.id] = el;
     return el;
   }
@@ -219,7 +265,7 @@ export class Game {
   }
 
   redrawPathToCell(initCell) {
-    console.log('redrawPathToCell', this.activeObj && this.activeObj.isStatic());
+    // console.log('redrawPathToCell', this.activeObj && this.activeObj.isStatic());
     if (this.activeObj && this.activeObj.isStatic()) {
         return this._handleStaticItem(initCell);
     }

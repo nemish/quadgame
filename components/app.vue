@@ -1,6 +1,9 @@
 <template>
   <div id='game'>
-    <ui-panel :focusedItem='focusedItem' :items='items' :currentTurn='currentTurn'></ui-panel>
+    <ui-panel :focusedItem='focusedItem'
+              :items='items'
+              :currentTurn='currentTurn'
+              :team='currentTeam'></ui-panel>
   </div>
 </template>
 
@@ -16,7 +19,8 @@ export default {
     return {
         focusedItem: null,
         items: {},
-        turn: 1
+        turn: 1,
+        team: {id: 1}
     }
   },
   components: {
@@ -25,9 +29,18 @@ export default {
   computed: {
     currentTurn() {
         return this.turn;
+    },
+    currentTeam() {
+        return this.team;
     }
   },
   mounted() {
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'n') {
+            this.game.watchers('NEXT_TURN');
+            this.game.watchers('ITEM_UNFOCUSED');
+        }
+    });
     this.game = createGameInstance({root: 'game'});
     this.game.init();
     this.items = this.game.playableObjects;
@@ -41,8 +54,9 @@ export default {
     });
 
     this.game.on('NEXT_TURN', () => {
-        this.turn = this.game.currentTurn;
-    })
+        this.turn = this.game.getCurrentTurn();
+        this.team = this.game.getCurrentTeam();
+    });
   }
 }
 </script>

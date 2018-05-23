@@ -4,17 +4,22 @@ import { gameInstance } from '@/game';
 let nextId = 1;
 
 export class ActiveObject {
-  constructor({x, y, game, factoryMethod}) {
+  constructor({x, y, game, team, factoryMethod}) {
     this.id = ++nextId;
+    this.team = team;
     this.factoryMethod = factoryMethod;
-    this.elem = factoryMethod({x, y});
+    this.game = game || gameInstance;
+    this.elem = factoryMethod({x, y, fill: this.game.getTeamColor(this.team)});
     this.x = x;
     this.y = y;
-    this.game = game || gameInstance;
     this.elem.click(this.onClick.bind(this));
     this.elem.mouseover(this.onMouseOver.bind(this));
     this.elem.mouseout(this.onMouseOut.bind(this));
     this.focused = false;
+  }
+
+  getTeam() {
+    return this.team;
   }
 
   getNormalizedSvgStr() {
@@ -106,6 +111,9 @@ export class ActiveObject {
   }
 
   onClick() {
+    if (this.team && this.game.getCurrentTeam().id !== this.team) {
+      return
+    }
     this.toggleFocus();
   }
 }
